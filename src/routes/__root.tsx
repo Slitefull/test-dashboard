@@ -9,6 +9,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import appCss from '~/styles/app.css?url'
 import { ThemeProvider, themeInitScript } from '~/lib/theme'
+import { AppToaster } from '~/components/app-toaster'
 
 interface RouterAppContext {
   queryClient: QueryClient
@@ -32,6 +33,7 @@ function RootComponent() {
     <RootDocument>
       <ThemeProvider>
         <Outlet />
+        <AppToaster />
       </ThemeProvider>
     </RootDocument>
   )

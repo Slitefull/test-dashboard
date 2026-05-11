@@ -3,10 +3,18 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const addRatedUserFn = vi.fn()
+const hoisted = vi.hoisted(() => ({
+  addRatedUserFn: vi.fn(),
+  toastSuccess: vi.fn(),
+}))
+const { addRatedUserFn, toastSuccess } = hoisted
 
 vi.mock('~/lib/rated-users', () => ({
-  addRatedUserFn: (...args: unknown[]) => addRatedUserFn(...args),
+  addRatedUserFn: hoisted.addRatedUserFn,
+}))
+
+vi.mock('sonner', () => ({
+  toast: { success: hoisted.toastSuccess },
 }))
 
 import { AddUserModal } from './add-user-modal'
@@ -26,6 +34,7 @@ function renderModal(onClose = vi.fn()) {
 describe('AddUserModal', () => {
   beforeEach(() => {
     addRatedUserFn.mockReset()
+    toastSuccess.mockReset()
   })
 
   it('renders form fields when open', () => {
@@ -79,6 +88,10 @@ describe('AddUserModal', () => {
       }),
     )
     await waitFor(() => expect(onClose).toHaveBeenCalled())
+    expect(toastSuccess).toHaveBeenCalledWith(
+      'User added',
+      expect.objectContaining({ description: expect.stringContaining('Alice') }),
+    )
   })
 
   it('surfaces server error', async () => {

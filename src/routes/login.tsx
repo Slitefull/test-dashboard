@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { toast } from 'sonner'
 import { getCurrentUserFn, loginFn } from '~/lib/auth'
 import { ThemeToggle } from '~/components/theme-toggle'
 
@@ -30,6 +31,7 @@ function LoginPage() {
         setPending(false)
         return
       }
+      toast.success('Signed in', { description: email })
       await router.invalidate()
       await router.navigate({ to: '/dashboard' })
     } catch (err) {

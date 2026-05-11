@@ -2,16 +2,27 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-const logoutFn = vi.fn()
-const invalidate = vi.fn().mockResolvedValue(undefined)
-const navigate = vi.fn().mockResolvedValue(undefined)
+const hoisted = vi.hoisted(() => ({
+  logoutFn: vi.fn(),
+  invalidate: vi.fn().mockResolvedValue(undefined),
+  navigate: vi.fn().mockResolvedValue(undefined),
+  toastSuccess: vi.fn(),
+}))
+const { logoutFn, invalidate, navigate, toastSuccess } = hoisted
 
 vi.mock('~/lib/auth', () => ({
-  logoutFn: (...args: unknown[]) => logoutFn(...args),
+  logoutFn: hoisted.logoutFn,
 }))
 
 vi.mock('@tanstack/react-router', () => ({
-  useRouter: () => ({ invalidate, navigate }),
+  useRouter: () => ({
+    invalidate: hoisted.invalidate,
+    navigate: hoisted.navigate,
+  }),
+}))
+
+vi.mock('sonner', () => ({
+  toast: { success: hoisted.toastSuccess },
 }))
 
 import { Header } from './header'
@@ -40,6 +51,7 @@ describe('Header', () => {
     logoutFn.mockReset().mockResolvedValue({ ok: true })
     invalidate.mockReset().mockResolvedValue(undefined)
     navigate.mockReset().mockResolvedValue(undefined)
+    toastSuccess.mockReset()
   })
 
   it('shows Add user button for ADMIN', () => {
@@ -71,7 +83,7 @@ describe('Header', () => {
     expect(logoutFn).not.toHaveBeenCalled()
   })
 
-  it('confirming sign out invokes logoutFn + navigate', async () => {
+  it('confirming sign out invokes logoutFn + navigate + toast', async () => {
     const user = userEvent.setup()
     renderHeader('USER')
     await user.click(screen.getByRole('button', { name: 'Sign out' }))
@@ -80,6 +92,7 @@ describe('Header', () => {
     await user.click(confirmBtn)
     expect(logoutFn).toHaveBeenCalled()
     expect(navigate).toHaveBeenCalledWith({ to: '/login' })
+    expect(toastSuccess).toHaveBeenCalledWith('Signed out')
   })
 
   it('cancel in dialog does not sign out', async () => {

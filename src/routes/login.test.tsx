@@ -6,6 +6,11 @@ const hoisted = vi.hoisted(() => ({
   loginFn: vi.fn(),
   invalidate: vi.fn().mockResolvedValue(undefined),
   navigate: vi.fn().mockResolvedValue(undefined),
+  toastSuccess: vi.fn(),
+}))
+
+vi.mock('sonner', () => ({
+  toast: { success: hoisted.toastSuccess },
 }))
 
 vi.mock('@tanstack/react-router', () => ({
@@ -40,6 +45,7 @@ describe('Login page', () => {
     hoisted.loginFn.mockReset()
     hoisted.invalidate.mockReset().mockResolvedValue(undefined)
     hoisted.navigate.mockReset().mockResolvedValue(undefined)
+    hoisted.toastSuccess.mockReset()
   })
 
   it('renders email + password fields', () => {
@@ -60,6 +66,10 @@ describe('Login page', () => {
     )
     await waitFor(() =>
       expect(hoisted.navigate).toHaveBeenCalledWith({ to: '/dashboard' }),
+    )
+    expect(hoisted.toastSuccess).toHaveBeenCalledWith(
+      'Signed in',
+      expect.objectContaining({ description: 'admin@example.com' }),
     )
   })
 

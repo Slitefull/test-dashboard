@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { addRatedUserFn } from '~/lib/rated-users'
 import type { RatedUserDTO } from '~/lib/rated-users'
 
@@ -24,8 +25,11 @@ export function AddUserModal({ open, onClose }: AddUserModalProps) {
     { name: string; rating: number }
   >({
     mutationFn: (data) => addRatedUserFn({ data }),
-    onSuccess: async () => {
+    onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ['rated-users'] })
+      toast.success('User added', {
+        description: `${created.name} (rating ${created.rating})`,
+      })
       reset()
       onClose()
     },

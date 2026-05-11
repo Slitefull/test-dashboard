@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { motion } from 'motion/react'
+import { toast } from 'sonner'
 import type { CurrentUser } from '~/lib/auth'
 import { logoutFn } from '~/lib/auth'
 import { ThemeToggle } from './theme-toggle'
@@ -21,6 +22,7 @@ export function Header({ user, onAddUser }: HeaderProps) {
     setSigningOut(true)
     try {
       await logoutFn()
+      toast.success('Signed out')
       await router.invalidate()
       await router.navigate({ to: '/login' })
     } finally {

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { FormattedMessage, useIntl } from 'react-intl'
 import { toast } from 'sonner'
 import { addRatedUserFn } from '~/lib/rated-users'
 import type { RatedUserDTO } from '~/lib/rated-users'
@@ -14,6 +15,7 @@ interface AddUserModalProps {
 const ease = [0.23, 1, 0.32, 1] as const
 
 export function AddUserModal({ open, onClose }: AddUserModalProps) {
+  const intl = useIntl()
   const [name, setName] = useState('')
   const [rating, setRating] = useState('50')
   const [error, setError] = useState<string | null>(null)
@@ -27,8 +29,8 @@ export function AddUserModal({ open, onClose }: AddUserModalProps) {
     mutationFn: (data) => addRatedUserFn({ data }),
     onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ['rated-users'] })
-      toast.success('User added', {
-        description: `${created.name} (rating ${created.rating})`,
+      toast.success(intl.formatMessage({ id: 'toast.userAdded' }), {
+        description: `${created.name} (${created.rating})`,
       })
       reset()
       onClose()
@@ -61,11 +63,11 @@ export function AddUserModal({ open, onClose }: AddUserModalProps) {
     setError(null)
     const parsed = Number(rating)
     if (!name.trim()) {
-      setError('Name is required.')
+      setError(intl.formatMessage({ id: 'addUser.error.nameRequired' }))
       return
     }
     if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
-      setError('Rating must be between 0 and 100.')
+      setError(intl.formatMessage({ id: 'addUser.error.ratingRange' }))
       return
     }
     mutation.mutate({ name: name.trim(), rating: parsed })
@@ -109,17 +111,17 @@ export function AddUserModal({ open, onClose }: AddUserModalProps) {
             <form onSubmit={onSubmit} noValidate>
               <div className="mb-5">
                 <h2 id="add-user-title" className="text-base font-semibold tracking-tight">
-                  Add user
+                  <FormattedMessage id="addUser.title" />
                 </h2>
                 <p className="mt-1 text-xs text-[var(--color-fg-muted)]">
-                  Create a new rated user entry.
+                  <FormattedMessage id="addUser.subtitle" />
                 </p>
               </div>
 
               <div className="space-y-4">
                 <label className="block">
                   <span className="mb-1 block text-xs font-medium text-[var(--color-fg-muted)]">
-                    User
+                    <FormattedMessage id="addUser.field.name" />
                   </span>
                   <input
                     autoFocus
@@ -133,8 +135,10 @@ export function AddUserModal({ open, onClose }: AddUserModalProps) {
 
                 <label className="block">
                   <span className="mb-1 block text-xs font-medium text-[var(--color-fg-muted)]">
-                    Rating{' '}
-                    <span className="text-[var(--color-fg-subtle)]">(0–100)</span>
+                    <FormattedMessage id="addUser.field.rating" />{' '}
+                    <span className="text-[var(--color-fg-subtle)]">
+                      <FormattedMessage id="addUser.field.ratingHint" />
+                    </span>
                   </span>
                   <input
                     type="number"
@@ -171,7 +175,7 @@ export function AddUserModal({ open, onClose }: AddUserModalProps) {
                   onClick={onCancel}
                   className="rounded-md border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-xs text-[var(--color-fg-muted)] transition hover:text-[var(--color-fg)] focus-ring"
                 >
-                  Cancel
+                  <FormattedMessage id="addUser.cancel" />
                 </button>
                 <motion.button
                   type="submit"
@@ -181,7 +185,9 @@ export function AddUserModal({ open, onClose }: AddUserModalProps) {
                   transition={{ duration: 0.15, ease }}
                   className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-[var(--color-accent-fg)] hover:brightness-110 disabled:opacity-60 focus-ring"
                 >
-                  {mutation.isPending ? 'Adding…' : 'Add user'}
+                  <FormattedMessage
+                    id={mutation.isPending ? 'addUser.submitting' : 'addUser.submit'}
+                  />
                 </motion.button>
               </div>
             </form>

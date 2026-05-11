@@ -1,9 +1,11 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { FormattedMessage, useIntl } from 'react-intl'
 import { toast } from 'sonner'
 import { getCurrentUserFn, loginFn } from '~/lib/auth'
 import { ThemeToggle } from '~/components/theme-toggle'
+import { LanguageToggle } from '~/components/language-toggle'
 
 export const Route = createFileRoute('/login')({
   beforeLoad: async () => {
@@ -15,6 +17,7 @@ export const Route = createFileRoute('/login')({
 
 function LoginPage() {
   const router = useRouter()
+  const intl = useIntl()
   const [email, setEmail] = useState('admin@example.com')
   const [password, setPassword] = useState('admin123')
   const [error, setError] = useState<string | null>(null)
@@ -31,11 +34,17 @@ function LoginPage() {
         setPending(false)
         return
       }
-      toast.success('Signed in', { description: email })
+      toast.success(intl.formatMessage({ id: 'toast.signedIn' }), {
+        description: email,
+      })
       await router.invalidate()
       await router.navigate({ to: '/dashboard' })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed.')
+      setError(
+        err instanceof Error
+          ? err.message
+          : intl.formatMessage({ id: 'login.error.fallback' }),
+      )
       setPending(false)
     }
   }
@@ -44,7 +53,8 @@ function LoginPage() {
 
   return (
     <main className="relative min-h-screen grid place-items-center px-4">
-      <div className="absolute right-6 top-6">
+      <div className="absolute right-6 top-6 flex items-center gap-2">
+        <LanguageToggle />
         <ThemeToggle />
       </div>
       <motion.div
@@ -68,13 +78,13 @@ function LoginPage() {
           >
             <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-[var(--color-fg-subtle)]">
               <span className="inline-block size-1.5 rounded-full bg-[var(--color-accent)]" />
-              Dashboard
+              <FormattedMessage id="login.brand" />
             </div>
             <h1 className="text-3xl font-semibold tracking-tight">
-              Sign in to continue
+              <FormattedMessage id="login.title" />
             </h1>
             <p className="mt-2 text-sm text-[var(--color-fg-muted)]">
-              Use a seeded account below.
+              <FormattedMessage id="login.subtitle" />
             </p>
           </motion.div>
 
@@ -86,7 +96,7 @@ function LoginPage() {
             className="space-y-4"
           >
             <Field
-              label="Email"
+              label={intl.formatMessage({ id: 'login.email' })}
               type="email"
               value={email}
               onChange={setEmail}
@@ -94,7 +104,7 @@ function LoginPage() {
               required
             />
             <Field
-              label="Password"
+              label={intl.formatMessage({ id: 'login.password' })}
               type="password"
               value={password}
               onChange={setPassword}
@@ -128,7 +138,9 @@ function LoginPage() {
               transition={{ duration: 0.15, ease }}
               className="w-full rounded-md bg-[var(--color-accent)] px-3 py-2.5 text-sm font-medium text-[var(--color-accent-fg)] hover:brightness-110 disabled:opacity-60 focus-ring"
             >
-              {pending ? 'Signing in…' : 'Sign in'}
+              <FormattedMessage
+                id={pending ? 'login.submitting' : 'login.submit'}
+              />
             </motion.button>
           </motion.form>
 
@@ -138,12 +150,16 @@ function LoginPage() {
             className="mt-10 border-t border-[var(--color-border)] pt-6 text-xs text-[var(--color-fg-muted)]"
           >
             <div className="mb-3 font-medium uppercase tracking-wider text-[var(--color-fg-subtle)]">
-              Test accounts
+              <FormattedMessage id="login.seeded.title" />
             </div>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 tabular-nums">
-              <dt className="text-[var(--color-accent)]">admin</dt>
+              <dt className="text-[var(--color-accent)]">
+                <FormattedMessage id="login.seeded.adminLabel" />
+              </dt>
               <dd className="text-[var(--color-fg)]">admin@example.com / admin123</dd>
-              <dt className="text-[var(--color-fg-subtle)]">user</dt>
+              <dt className="text-[var(--color-fg-subtle)]">
+                <FormattedMessage id="login.seeded.userLabel" />
+              </dt>
               <dd className="text-[var(--color-fg)]">user@example.com / user123</dd>
             </dl>
           </motion.div>

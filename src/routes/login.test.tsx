@@ -28,15 +28,15 @@ vi.mock('~/lib/auth', () => ({
 }))
 
 import { Route } from './login'
-import { ThemeProvider } from '~/lib/theme'
+import { AppTestProviders } from '~/test/providers'
 
 function renderLogin() {
   const Cmp = Route.options.component
   if (!Cmp) throw new Error('Login route has no component')
   return render(
-    <ThemeProvider>
+    <AppTestProviders>
       <Cmp />
-    </ThemeProvider>,
+    </AppTestProviders>,
   )
 }
 

@@ -26,7 +26,7 @@ vi.mock('sonner', () => ({
 }))
 
 import { Header } from './header'
-import { ThemeProvider } from '~/lib/theme'
+import { AppTestProviders } from '~/test/providers'
 import type { CurrentUser } from '~/lib/auth'
 
 function renderHeader(role: CurrentUser['role'], onAddUser = vi.fn()) {
@@ -39,9 +39,9 @@ function renderHeader(role: CurrentUser['role'], onAddUser = vi.fn()) {
     onAddUser,
     user,
     ...render(
-      <ThemeProvider>
+      <AppTestProviders>
         <Header user={user} onAddUser={onAddUser} />
-      </ThemeProvider>,
+      </AppTestProviders>,
     ),
   }
 }

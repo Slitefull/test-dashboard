@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { motion } from 'motion/react'
+import { FormattedMessage, useIntl } from 'react-intl'
 import { toast } from 'sonner'
 import type { CurrentUser } from '~/lib/auth'
 import { logoutFn } from '~/lib/auth'
 import { ThemeToggle } from './theme-toggle'
+import { LanguageToggle } from './language-toggle'
 import { ConfirmDialog } from './confirm-dialog'
 
 interface HeaderProps {
@@ -14,6 +16,7 @@ interface HeaderProps {
 
 export function Header({ user, onAddUser }: HeaderProps) {
   const router = useRouter()
+  const intl = useIntl()
   const isAdmin = user.role === 'ADMIN'
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
@@ -22,7 +25,7 @@ export function Header({ user, onAddUser }: HeaderProps) {
     setSigningOut(true)
     try {
       await logoutFn()
-      toast.success('Signed out')
+      toast.success(intl.formatMessage({ id: 'toast.signedOut' }))
       await router.invalidate()
       await router.navigate({ to: '/login' })
     } finally {
@@ -46,7 +49,9 @@ export function Header({ user, onAddUser }: HeaderProps) {
           >
             D
           </div>
-          <div className="text-sm font-semibold tracking-tight">Dashboard</div>
+          <div className="text-sm font-semibold tracking-tight">
+            <FormattedMessage id="app.title" />
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -59,7 +64,7 @@ export function Header({ user, onAddUser }: HeaderProps) {
               transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
               className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-[var(--color-accent-fg)] focus-ring"
             >
-              + Add user
+              <FormattedMessage id="header.addUser" />
             </motion.button>
           ) : null}
 
@@ -70,6 +75,7 @@ export function Header({ user, onAddUser }: HeaderProps) {
             </div>
           </div>
 
+          <LanguageToggle />
           <ThemeToggle />
 
           <button
@@ -77,22 +83,23 @@ export function Header({ user, onAddUser }: HeaderProps) {
             onClick={() => setConfirmOpen(true)}
             className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-xs text-[var(--color-fg-muted)] transition hover:text-[var(--color-fg)] focus-ring"
           >
-            Sign out
+            <FormattedMessage id="header.signOut" />
           </button>
         </div>
       </motion.div>
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Sign out?"
+        title={intl.formatMessage({ id: 'header.confirm.title' })}
         description={
           <>
-            You will be signed out as{' '}
-            <span className="text-[var(--color-fg)]">{user.email}</span>. Any
-            unsaved work will be lost.
+            <FormattedMessage id="header.confirm.desc.prefix" />
+            <span className="text-[var(--color-fg)]">{user.email}</span>
+            <FormattedMessage id="header.confirm.desc.suffix" />
           </>
         }
-        confirmLabel="Sign out"
+        confirmLabel={intl.formatMessage({ id: 'header.signOut' })}
+        cancelLabel={intl.formatMessage({ id: 'addUser.cancel' })}
         tone="danger"
         pending={signingOut}
         onCancel={() => (signingOut ? undefined : setConfirmOpen(false))}

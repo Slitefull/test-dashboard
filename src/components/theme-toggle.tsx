@@ -1,15 +1,19 @@
 import { motion, AnimatePresence } from 'motion/react'
+import { useIntl } from 'react-intl'
 import { useTheme } from '~/lib/theme'
 
 export function ThemeToggle() {
   const { theme, toggle } = useTheme()
+  const intl = useIntl()
   const isDark = theme === 'dark'
 
   return (
     <button
       type="button"
       onClick={toggle}
-      aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+      aria-label={intl.formatMessage({
+        id: isDark ? 'toggle.theme.toLight' : 'toggle.theme.toDark',
+      })}
       aria-pressed={!isDark}
       className="relative grid size-8 place-items-center overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-fg-muted)] transition-colors hover:text-[var(--color-fg)] focus-ring"
     >

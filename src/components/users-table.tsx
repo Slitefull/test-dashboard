@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { useDebouncedValue } from '~/lib/use-debounced-value'
 import { AnimatePresence, motion } from 'motion/react'
+import { FormattedMessage, useIntl } from 'react-intl'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
   flexRender,
@@ -24,13 +25,18 @@ import {
 
 const PAGE_SIZES: readonly number[] = [10, 25, 50, 100]
 const ease = [0.23, 1, 0.32, 1] as const
-const dateFmt = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: '2-digit',
-})
 
 export function UsersTable() {
+  const intl = useIntl()
+  const dateFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(intl.locale, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+      }),
+    [intl.locale],
+  )
   const [page, setPage] = useState(DEFAULT_LIST_PARAMS.page)
   const [pageSize, setPageSize] = useState(DEFAULT_LIST_PARAMS.pageSize)
   const [sortBy, setSortBy] = useState<SortField>(DEFAULT_LIST_PARAMS.sortBy)
@@ -70,7 +76,7 @@ export function UsersTable() {
       {
         id: 'name',
         accessorKey: 'name',
-        header: 'User',
+        header: () => <FormattedMessage id="table.col.user" />,
         cell: ({ row }) => {
           const name = row.original.name
           const initials = name
@@ -93,13 +99,13 @@ export function UsersTable() {
       {
         id: 'rating',
         accessorKey: 'rating',
-        header: 'Rating',
+        header: () => <FormattedMessage id="table.col.rating" />,
         cell: ({ getValue }) => <RatingBar value={getValue<number>()} />,
       },
       {
         id: 'createdAt',
         accessorKey: 'createdAt',
-        header: 'Added',
+        header: () => <FormattedMessage id="table.col.added" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-[var(--color-fg-muted)]">
             {dateFmt.format(new Date(getValue<string>()))}
@@ -107,7 +113,7 @@ export function UsersTable() {
         ),
       },
     ],
-    [],
+    [dateFmt],
   )
 
   const table = useReactTable<RatedUserDTO>({
@@ -150,14 +156,14 @@ export function UsersTable() {
           <input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search by name or rating"
+            placeholder={intl.formatMessage({ id: 'table.search.placeholder' })}
             className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2 pl-9 pr-9 text-sm placeholder:text-[var(--color-fg-subtle)] focus-ring transition focus:border-[var(--color-accent)]"
           />
           {searchInput ? (
             <button
               type="button"
               onClick={() => setSearchInput('')}
-              aria-label="Clear search"
+              aria-label={intl.formatMessage({ id: 'table.search.clear' })}
               className="absolute inset-y-0 right-2 my-auto h-6 rounded px-2 text-xs text-[var(--color-fg-subtle)] transition hover:text-[var(--color-fg)] focus-ring"
             >
               ×
@@ -173,12 +179,16 @@ export function UsersTable() {
               className="inline-flex items-center gap-1.5 text-[var(--color-fg-subtle)]"
             >
               <span className="size-1.5 animate-pulse rounded-full bg-[var(--color-accent)]" />
-              Loading
+              <FormattedMessage id="table.loading" />
             </motion.span>
           ) : null}
           <div>
-            <span className="text-[var(--color-fg)]">{total}</span>
-            <span className="ml-1">total</span>
+            <FormattedMessage
+              id="table.total"
+              values={{
+                n: <span className="text-[var(--color-fg)]">{total}</span>,
+              }}
+            />
           </div>
         </div>
       </div>
@@ -311,10 +321,13 @@ function Pagination({
   onLast,
   onPageSizeChange,
 }: PaginationProps) {
+  const intl = useIntl()
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
       <div className="flex items-center gap-2 text-[var(--color-fg-muted)]">
-        <span>Rows per page</span>
+        <span>
+          <FormattedMessage id="table.pagination.rowsPerPage" />
+        </span>
         <div className="relative">
           <select
             value={pageSize}
@@ -337,17 +350,31 @@ function Pagination({
       </div>
 
       <div className="tabular-nums text-[var(--color-fg-subtle)]">
-        <span className="text-[var(--color-fg)]">
-          {rangeStart}–{rangeEnd}
-        </span>{' '}
-        of <span className="text-[var(--color-fg)]">{total}</span>
+        <FormattedMessage
+          id="table.pagination.range"
+          values={{
+            from: (
+              <span className="text-[var(--color-fg)]">{rangeStart}</span>
+            ),
+            to: <span className="text-[var(--color-fg)]">{rangeEnd}</span>,
+            total: <span className="text-[var(--color-fg)]">{total}</span>,
+          }}
+        />
       </div>
 
       <div className="flex items-center gap-1">
-        <PageButton onClick={onFirst} disabled={!canPrev} aria-label="First page">
+        <PageButton
+          onClick={onFirst}
+          disabled={!canPrev}
+          aria-label={intl.formatMessage({ id: 'table.pagination.first' })}
+        >
           ⏮
         </PageButton>
-        <PageButton onClick={onPrev} disabled={!canPrev} aria-label="Previous page">
+        <PageButton
+          onClick={onPrev}
+          disabled={!canPrev}
+          aria-label={intl.formatMessage({ id: 'table.pagination.previous' })}
+        >
           ←
         </PageButton>
         <AnimatePresence mode="wait" initial={false}>
@@ -357,16 +384,33 @@ function Pagination({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.16, ease }}
-            className="min-w-[6rem] text-center tabular-nums text-[var(--color-fg-muted)]"
+            className="min-w-[7rem] text-center tabular-nums text-[var(--color-fg-muted)]"
           >
-            Page <span className="text-[var(--color-fg)]">{page + 1}</span> of{' '}
-            <span className="text-[var(--color-fg)]">{pageCount}</span>
+            <FormattedMessage
+              id="table.pagination.page"
+              values={{
+                page: (
+                  <span className="text-[var(--color-fg)]">{page + 1}</span>
+                ),
+                total: (
+                  <span className="text-[var(--color-fg)]">{pageCount}</span>
+                ),
+              }}
+            />
           </motion.span>
         </AnimatePresence>
-        <PageButton onClick={onNext} disabled={!canNext} aria-label="Next page">
+        <PageButton
+          onClick={onNext}
+          disabled={!canNext}
+          aria-label={intl.formatMessage({ id: 'table.pagination.next' })}
+        >
           →
         </PageButton>
-        <PageButton onClick={onLast} disabled={!canNext} aria-label="Last page">
+        <PageButton
+          onClick={onLast}
+          disabled={!canNext}
+          aria-label={intl.formatMessage({ id: 'table.pagination.last' })}
+        >
           ⏭
         </PageButton>
       </div>
@@ -490,12 +534,14 @@ function EmptyState({ searching }: { searching: boolean }) {
         {searching ? '⌕' : '·'}
       </div>
       <div className="text-sm font-medium text-[var(--color-fg)]">
-        {searching ? 'No matches' : 'No users yet'}
+        <FormattedMessage
+          id={searching ? 'table.empty.search.title' : 'table.empty.title'}
+        />
       </div>
       <div className="mt-1 text-xs text-[var(--color-fg-muted)]">
-        {searching
-          ? 'Try a different name or rating.'
-          : 'An admin can add the first one.'}
+        <FormattedMessage
+          id={searching ? 'table.empty.search.desc' : 'table.empty.desc'}
+        />
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { motion } from 'motion/react'
+import { FormattedMessage } from 'react-intl'
 import { getCurrentUserFn } from '~/lib/auth'
 import {
   DEFAULT_LIST_PARAMS,
@@ -41,13 +42,13 @@ function DashboardPage() {
         <div className="mb-8 flex items-end justify-between">
           <div>
             <div className="text-xs uppercase tracking-[0.18em] text-[var(--color-fg-subtle)]">
-              Overview
+              <FormattedMessage id="dashboard.eyebrow" />
             </div>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-              Rated users
+              <FormattedMessage id="dashboard.title" />
             </h1>
             <p className="mt-1 text-sm text-[var(--color-fg-muted)]">
-              Sortable, searchable list of users and their ratings.
+              <FormattedMessage id="dashboard.subtitle" />
             </p>
           </div>
         </div>

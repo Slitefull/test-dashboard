@@ -18,15 +18,18 @@ vi.mock('sonner', () => ({
 }))
 
 import { AddUserModal } from './add-user-modal'
+import { IntlTestProvider } from '~/test/providers'
 
 function renderModal(onClose = vi.fn()) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   const utils = render(
-    <QueryClientProvider client={queryClient}>
-      <AddUserModal open={true} onClose={onClose} />
-    </QueryClientProvider>,
+    <IntlTestProvider>
+      <QueryClientProvider client={queryClient}>
+        <AddUserModal open={true} onClose={onClose} />
+      </QueryClientProvider>
+    </IntlTestProvider>,
   )
   return { onClose, queryClient, ...utils }
 }

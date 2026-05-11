@@ -28,6 +28,7 @@ vi.mock('~/lib/rated-users', async () => {
 })
 
 import { UsersTable } from './users-table'
+import { IntlTestProvider } from '~/test/providers'
 
 function makeRows(start: number, end: number): RatedUserDTO[] {
   return Array.from({ length: end - start }, (_, i) => ({
@@ -52,9 +53,11 @@ function renderTable() {
     defaultOptions: { queries: { retry: false } },
   })
   return render(
-    <QueryClientProvider client={client}>
-      <UsersTable />
-    </QueryClientProvider>,
+    <IntlTestProvider>
+      <QueryClientProvider client={client}>
+        <UsersTable />
+      </QueryClientProvider>
+    </IntlTestProvider>,
   )
 }
 
@@ -235,8 +238,8 @@ describe('UsersTable', () => {
   it('displays total count from server', async () => {
     listRatedUsersFn.mockResolvedValue(makeResult(makeRows(0, 10), 50))
     renderTable()
-    expect(await screen.findByText('1–10')).toBeInTheDocument()
-    const range = screen.getByText('1–10').parentElement
-    expect(range?.textContent).toMatch(/1–10 of 50/)
+    await waitFor(() => {
+      expect(document.body.textContent).toMatch(/1–10 of 50/)
+    })
   })
 })

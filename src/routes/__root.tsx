@@ -9,6 +9,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import appCss from '~/styles/app.css?url'
 import { ThemeProvider, themeInitScript } from '~/lib/theme'
+import { I18nProvider, localeInitScript } from '~/lib/i18n/i18n'
 import { AppToaster } from '~/components/app-toaster'
 
 interface RouterAppContext {
@@ -23,7 +24,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       { title: 'Dashboard' },
     ],
     links: [{ rel: 'stylesheet', href: appCss }],
-    scripts: [{ children: themeInitScript }],
+    scripts: [{ children: themeInitScript }, { children: localeInitScript }],
   }),
   component: RootComponent,
 })
@@ -32,8 +33,10 @@ function RootComponent() {
   return (
     <RootDocument>
       <ThemeProvider>
-        <Outlet />
-        <AppToaster />
+        <I18nProvider>
+          <Outlet />
+          <AppToaster />
+        </I18nProvider>
       </ThemeProvider>
     </RootDocument>
   )

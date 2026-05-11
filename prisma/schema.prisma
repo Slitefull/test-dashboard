@@ -1,0 +1,35 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model AuthUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  ratedUsers   RatedUser[] @relation("RatedUserCreator")
+}
+
+model RatedUser {
+  id        String   @id @default(cuid())
+  name      String
+  rating    Int
+  createdAt DateTime @default(now())
+  createdById String?
+  createdBy   AuthUser? @relation("RatedUserCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([name])
+  @@index([rating])
+}

@@ -8,7 +8,13 @@ import {
 import { useDebouncedValue } from '~/lib/use-debounced-value'
 import { AnimatePresence, motion } from 'motion/react'
 import { FormattedMessage, useIntl } from 'react-intl'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   flexRender,
   getCoreRowModel,
@@ -17,17 +23,47 @@ import {
 } from '@tanstack/react-table'
 import {
   DEFAULT_LIST_PARAMS,
+  deleteRatedUserFn,
   ratedUsersQueryOptions,
   type RatedUserDTO,
   type SortDir,
   type SortField,
 } from '~/lib/rated-users'
+import { RowActions } from './row-actions'
+import { UserFormModal } from './user-form-modal'
+import { ConfirmDialog } from './confirm-dialog'
+
+interface UsersTableProps {
+  canManage?: boolean
+}
 
 const PAGE_SIZES: readonly number[] = [10, 25, 50, 100]
 const ease = [0.23, 1, 0.32, 1] as const
 
-export function UsersTable() {
+export function UsersTable({ canManage = false }: UsersTableProps) {
   const intl = useIntl()
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState<RatedUserDTO | null>(null)
+  const [deleting, setDeleting] = useState<RatedUserDTO | null>(null)
+
+  const deleteMutation = useMutation<
+    { id: string },
+    Error,
+    { id: string; name: string }
+  >({
+    mutationFn: ({ id }) => deleteRatedUserFn({ data: { id } }),
+    onSuccess: async (_, vars) => {
+      await queryClient.invalidateQueries({ queryKey: ['rated-users'] })
+      toast.success(intl.formatMessage({ id: 'toast.userDeleted' }), {
+        description: vars.name,
+      })
+      setDeleting(null)
+    },
+    onError: (e) => {
+      toast.error(e.message)
+    },
+  })
+
   const dateFmt = useMemo(
     () =>
       new Intl.DateTimeFormat(intl.locale, {
@@ -71,8 +107,8 @@ export function UsersTable() {
     return `${data.page}:${data.pageSize}:${data.rows.map((r) => r.id).join(',')}`
   }, [data])
 
-  const columns = useMemo<ColumnDef<RatedUserDTO>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<RatedUserDTO>[]>(() => {
+    const base: ColumnDef<RatedUserDTO>[] = [
       {
         id: 'name',
         accessorKey: 'name',
@@ -112,9 +148,24 @@ export function UsersTable() {
           </span>
         ),
       },
-    ],
-    [dateFmt],
-  )
+    ]
+    if (canManage) {
+      base.push({
+        id: 'actions',
+        header: () => <span className="sr-only">·</span>,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <RowActions
+              onEdit={() => setEditing(row.original)}
+              onDelete={() => setDeleting(row.original)}
+            />
+          </div>
+        ),
+      })
+    }
+    return base
+  }, [dateFmt, canManage])
 
   const table = useReactTable<RatedUserDTO>({
     data: rows,
@@ -199,25 +250,36 @@ export function UsersTable() {
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((h) => {
-                  const id = h.column.id as SortField
-                  const isSorted = sortBy === id
+                  const colId = h.column.id
+                  const isSortable =
+                    colId === 'name' ||
+                    colId === 'rating' ||
+                    colId === 'createdAt'
+                  const sortField: SortField | null = isSortable
+                    ? colId
+                    : null
+                  const isSorted = sortField !== null && sortBy === sortField
                   return (
                     <th
                       key={h.id}
                       scope="col"
                       className="px-5 py-3 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--color-fg-subtle)]"
                     >
-                      <button
-                        type="button"
-                        onClick={() => toggleSort(id)}
-                        className="inline-flex items-center gap-1.5 transition hover:text-[var(--color-fg)] focus-ring"
-                      >
-                        {flexRender(h.column.columnDef.header, h.getContext())}
-                        <SortIndicator
-                          active={isSorted}
-                          dir={isSorted ? sortDir : null}
-                        />
-                      </button>
+                      {sortField ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleSort(sortField)}
+                          className="inline-flex items-center gap-1.5 transition hover:text-[var(--color-fg)] focus-ring"
+                        >
+                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          <SortIndicator
+                            active={isSorted}
+                            dir={isSorted ? sortDir : null}
+                          />
+                        </button>
+                      ) : (
+                        flexRender(h.column.columnDef.header, h.getContext())
+                      )}
                     </th>
                   )
                 })}
@@ -286,6 +348,40 @@ export function UsersTable() {
           setPage(0)
         }}
       />
+
+      {canManage ? (
+        <>
+          <UserFormModal
+            open={editing !== null}
+            mode="edit"
+            initial={editing}
+            onClose={() => setEditing(null)}
+          />
+          <ConfirmDialog
+            open={deleting !== null}
+            title={intl.formatMessage({ id: 'deleteUser.title' })}
+            description={intl.formatMessage(
+              { id: 'deleteUser.desc' },
+              { name: deleting?.name ?? '' },
+            )}
+            confirmLabel={
+              deleteMutation.isPending
+                ? intl.formatMessage({ id: 'deleteUser.deleting' })
+                : intl.formatMessage({ id: 'deleteUser.confirm' })
+            }
+            cancelLabel={intl.formatMessage({ id: 'addUser.cancel' })}
+            tone="danger"
+            pending={deleteMutation.isPending}
+            onCancel={() =>
+              deleteMutation.isPending ? undefined : setDeleting(null)
+            }
+            onConfirm={() => {
+              if (!deleting) return
+              deleteMutation.mutate({ id: deleting.id, name: deleting.name })
+            }}
+          />
+        </>
+      ) : null}
     </div>
   )
 }

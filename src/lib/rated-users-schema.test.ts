@@ -4,7 +4,9 @@ import {
   buildOrderBy,
   buildWhere,
   DEFAULT_LIST_PARAMS,
+  deleteSchema,
   listSchema,
+  updateSchema,
 } from './rated-users-schema'
 
 describe('listSchema', () => {
@@ -69,6 +71,37 @@ describe('addSchema', () => {
 
   it('rejects names over 120 chars', () => {
     expect(() => addSchema.parse({ name: 'a'.repeat(121), rating: 0 })).toThrow()
+  })
+})
+
+describe('updateSchema', () => {
+  it('accepts valid id + name + rating', () => {
+    expect(
+      updateSchema.parse({ id: 'x', name: 'Alice', rating: 50 }),
+    ).toEqual({ id: 'x', name: 'Alice', rating: 50 })
+  })
+  it('rejects empty id', () => {
+    expect(() => updateSchema.parse({ id: '', name: 'A', rating: 0 })).toThrow()
+  })
+  it('rejects bad rating', () => {
+    expect(() => updateSchema.parse({ id: 'x', name: 'A', rating: 200 })).toThrow()
+  })
+  it('trims name', () => {
+    expect(
+      updateSchema.parse({ id: 'x', name: '  Bob  ', rating: 1 }).name,
+    ).toBe('Bob')
+  })
+})
+
+describe('deleteSchema', () => {
+  it('accepts non-empty id', () => {
+    expect(deleteSchema.parse({ id: 'x' })).toEqual({ id: 'x' })
+  })
+  it('rejects empty id', () => {
+    expect(() => deleteSchema.parse({ id: '' })).toThrow()
+  })
+  it('rejects missing id', () => {
+    expect(() => deleteSchema.parse({})).toThrow()
   })
 })
 

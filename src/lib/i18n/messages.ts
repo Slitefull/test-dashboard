@@ -76,6 +76,25 @@ const en = {
   'addUser.submitting': 'Adding…',
   'toast.userAdded': 'User added',
 
+  // Edit user modal
+  'editUser.title': 'Edit user',
+  'editUser.subtitle': 'Update name or rating.',
+  'editUser.submit': 'Save',
+  'editUser.submitting': 'Saving…',
+  'toast.userUpdated': 'User updated',
+
+  // Delete user modal
+  'deleteUser.title': 'Delete user?',
+  'deleteUser.desc': 'This will permanently remove {name}. Cannot be undone.',
+  'deleteUser.confirm': 'Delete',
+  'deleteUser.deleting': 'Deleting…',
+  'toast.userDeleted': 'User deleted',
+
+  // Row actions
+  'row.actions.label': 'Open row actions',
+  'row.actions.edit': 'Edit',
+  'row.actions.delete': 'Delete',
+
   // Toggles
   'toggle.theme.toLight': 'Switch to light theme',
   'toggle.theme.toDark': 'Switch to dark theme',
@@ -147,6 +166,25 @@ const uk: Record<MessageKey, string> = {
   'addUser.submit': 'Додати',
   'addUser.submitting': 'Додаємо…',
   'toast.userAdded': 'Юзера додано',
+
+  // Edit user modal
+  'editUser.title': 'Редагувати юзера',
+  'editUser.subtitle': 'Оновіть імʼя або оцінку.',
+  'editUser.submit': 'Зберегти',
+  'editUser.submitting': 'Зберігаємо…',
+  'toast.userUpdated': 'Юзера оновлено',
+
+  // Delete user modal
+  'deleteUser.title': 'Видалити юзера?',
+  'deleteUser.desc': 'Це назавжди видалить {name}. Скасувати буде неможливо.',
+  'deleteUser.confirm': 'Видалити',
+  'deleteUser.deleting': 'Видаляємо…',
+  'toast.userDeleted': 'Юзера видалено',
+
+  // Row actions
+  'row.actions.label': 'Відкрити дії рядка',
+  'row.actions.edit': 'Редагувати',
+  'row.actions.delete': 'Видалити',
 
   // Toggles
   'toggle.theme.toLight': 'Перейти на світлу тему',

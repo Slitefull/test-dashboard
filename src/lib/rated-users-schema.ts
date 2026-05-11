@@ -35,6 +35,20 @@ export const addSchema = z.object({
 
 export type AddRatedUserInput = z.input<typeof addSchema>
 
+export const updateSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  rating: z.coerce.number().int().min(0).max(100),
+})
+
+export type UpdateRatedUserInput = z.input<typeof updateSchema>
+
+export const deleteSchema = z.object({
+  id: z.string().min(1),
+})
+
+export type DeleteRatedUserInput = z.input<typeof deleteSchema>
+
 export function buildWhere(
   search: string,
 ): Prisma.RatedUserWhereInput | undefined {

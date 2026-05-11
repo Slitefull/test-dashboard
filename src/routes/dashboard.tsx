@@ -53,7 +53,7 @@ function DashboardPage() {
           </div>
         </div>
 
-        <UsersTable />
+        <UsersTable canManage={user.role === 'ADMIN'} />
       </motion.main>
 
       {user.role === 'ADMIN' ? (

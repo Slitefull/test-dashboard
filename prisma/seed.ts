@@ -42,7 +42,14 @@ async function main(): Promise<void> {
       'Reyes', 'Suzuki', 'Vasquez', 'Walsh',
     ]
     const seen = new Set<string>()
-    const rows: Array<{ name: string; rating: number; createdById: string }> = []
+    const rows: Array<{
+      name: string
+      rating: number
+      createdById: string
+      createdAt: Date
+    }> = []
+    const now = Date.now()
+    const dayMs = 24 * 60 * 60 * 1000
     let attempts = 0
     while (rows.length < 50 && attempts < 500) {
       attempts++
@@ -52,7 +59,13 @@ async function main(): Promise<void> {
       if (seen.has(name)) continue
       seen.add(name)
       const rating = Math.floor(Math.random() * 101)
-      rows.push({ name, rating, createdById: admin.id })
+      const offsetMs = Math.floor(Math.random() * 30 * dayMs)
+      rows.push({
+        name,
+        rating,
+        createdById: admin.id,
+        createdAt: new Date(now - offsetMs),
+      })
     }
     await prisma.ratedUser.createMany({ data: rows })
     console.log(`Inserted ${rows.length} rated users.`)
